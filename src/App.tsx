@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import type { WorldSnapshot, CellSnapshot } from './simulation/serialize.js'
 import { traitsFrom, SHAPE_NAMES } from './simulation/genome.js'
-import { Renderer } from './rendering/renderer.js'
+import { LayerCompositor } from './rendering/layers.js'
 import type { FieldMode, Viewport } from './rendering/renderer.js'
 import { useSimulation } from './ui/hooks/useSimulation.js'
 import type { SimMode, SimSpeed } from './ui/hooks/useSimulation.js'
@@ -12,8 +12,7 @@ const WORLD_H = 3200
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const bloomRef = useRef<HTMLCanvasElement>(null)
-  const rendererRef = useRef<Renderer | null>(null)
+  const compositorRef = useRef<LayerCompositor | null>(null)
 
   const snapshotRef = useRef<WorldSnapshot | null>(null)
   const vpRef = useRef<Viewport>({ vx: WORLD_W / 2, vy: WORLD_H / 2, vscale: 1, W: window.innerWidth, H: window.innerHeight })
@@ -24,35 +23,31 @@ export default function App() {
   const [paused, setPaused] = useState(false)
   const [speed, setSpeed] = useState<SimSpeed>(1)
   const [selectedCell, setSelectedCell] = useState<CellSnapshot | null>(null)
-
-  // Stats (updated from snapshot)
   const [stats, setStats] = useState({ cellCount: 0, colonyCount: 0, nutrientCount: 0, maxGeneration: 0, speciesCount: 0, tick: 0 })
 
   const isDragging = useRef(false)
   const dragStart = useRef({ x: 0, y: 0, vx: 0, vy: 0 })
   const selectedIdRef = useRef<number | null>(null)
 
-  // Init renderer
   useEffect(() => {
     const canvas = canvasRef.current!
-    const bloom = bloomRef.current!
-    rendererRef.current = new Renderer(canvas, bloom)
+    compositorRef.current = new LayerCompositor(canvas)
 
     function resize() {
       const W = window.innerWidth
       const H = window.innerHeight
-      canvas.width = bloom.width = W
-      canvas.height = bloom.height = H
+      canvas.width = W
+      canvas.height = H
       vpRef.current.W = W
       vpRef.current.H = H
+      compositorRef.current?.resize(W, H)
     }
     resize()
     window.addEventListener('resize', resize)
 
-    // Render loop (independent of sim tick rate)
     function renderLoop() {
-      if (snapshotRef.current && rendererRef.current) {
-        rendererRef.current.render(snapshotRef.current, vpRef.current)
+      if (snapshotRef.current && compositorRef.current) {
+        compositorRef.current.render(snapshotRef.current, vpRef.current)
       }
       rafRenderRef.current = requestAnimationFrame(renderLoop)
     }
@@ -67,7 +62,6 @@ export default function App() {
   const onSnapshot = useCallback((snap: WorldSnapshot) => {
     snapshotRef.current = snap
     setStats(snap.stats)
-    // Update selected cell data if we have one
     if (selectedIdRef.current !== null) {
       const found = snap.cells.find(c => c.id === selectedIdRef.current)
       if (found) setSelectedCell(found)
@@ -79,7 +73,7 @@ export default function App() {
 
   const setFieldMode = (fm: FieldMode) => {
     setFieldModeState(fm)
-    rendererRef.current?.setFieldMode(fm)
+    compositorRef.current?.setFieldMode(fm)
   }
 
   const screenToWorld = (sx: number, sy: number): [number, number] => {
@@ -109,7 +103,7 @@ export default function App() {
       const cell = findCellAt(wx, wy)
       setSelectedCell(cell)
       selectedIdRef.current = cell?.id ?? null
-      rendererRef.current?.setSelectedId(cell?.id ?? null)
+      compositorRef.current?.setSelectedId(cell?.id ?? null)
     } else if (mode === 'seed') {
       seed(wx, wy)
     } else if (mode === 'inject') {
@@ -155,21 +149,17 @@ export default function App() {
     )
   }
 
-  const inspectorCell = selectedCell
-  const inspectorTraits = inspectorCell ? traitsFrom(inspectorCell.genome) : null
+  const inspectorTraits = selectedCell ? traitsFrom(selectedCell.genome) : null
 
   return (
     <div className={`app ${fieldMode === 'light' ? 'lightfield' : ''}`}>
-      <canvas
-        ref={canvasRef}
-        id="canvas"
+      <canvas ref={canvasRef} id="canvas"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onWheel={handleWheel}
         style={{ cursor: mode === 'observe' ? 'crosshair' : 'cell' }}
       />
-      <canvas ref={bloomRef} id="bloom-canvas" />
 
       <div id="hud">
         <div className="hud-title">Life / 0.2</div>
@@ -186,16 +176,16 @@ export default function App() {
         <button className={fieldMode === 'light' ? 'active' : ''} onClick={() => setFieldMode('light')}>Light field</button>
       </div>
 
-      {inspectorCell && inspectorTraits && (
+      {selectedCell && inspectorTraits && (
         <div id="inspector">
           <div className="inspector-title">Cell Inspector</div>
-          <div className="inspector-row">Energy <span>{inspectorCell.energy.toFixed(1)}</span></div>
-          <div className="inspector-row">Age <span>{inspectorCell.age}</span></div>
-          <div className="inspector-row">Generation <span>{inspectorCell.generation}</span></div>
+          <div className="inspector-row">Energy <span>{selectedCell.energy.toFixed(1)}</span></div>
+          <div className="inspector-row">Age <span>{selectedCell.age}</span></div>
+          <div className="inspector-row">Generation <span>{selectedCell.generation}</span></div>
           <div className="inspector-row">Shape <span>{SHAPE_NAMES[inspectorTraits.shape]}</span></div>
           <div className="inspector-row">Adhesion <span>{['none', 'A', 'B', 'C'][inspectorTraits.adhesion]}</span></div>
           <div className="inspector-row">Metabolism <span>{inspectorTraits.metabolism.toFixed(2)}</span></div>
-          <div className="genome-display">{inspectorCell.genome.toString(2).padStart(16, '0')}</div>
+          <div className="genome-display">{selectedCell.genome.toString(2).padStart(16, '0')}</div>
         </div>
       )}
 
