@@ -7,6 +7,8 @@ import { LayerCompositor } from './rendering/layers.js'
 import type { FieldMode, Viewport } from './rendering/renderer.js'
 import { useSimulation } from './ui/hooks/useSimulation.js'
 import type { SimMode, SimSpeed } from './ui/hooks/useSimulation.js'
+import { useStatsHistory } from './ui/hooks/useStatsHistory.js'
+import { StatsPanel } from './ui/panels/StatsPanel.js'
 import './App.css'
 
 const WORLD_W = 3200
@@ -29,6 +31,8 @@ export default function App() {
   const [selectedCell, setSelectedCell] = useState<CellSnapshot | null>(null)
   const [barriers, setBarriers] = useState<Barrier[]>([])
   const [stats, setStats] = useState({ cellCount: 0, colonyCount: 0, nutrientCount: 0, maxGeneration: 0, speciesCount: 0, tick: 0 })
+  const [statsOpen, setStatsOpen] = useState(false)
+  const { history: statsHistory, push: pushStats, clear: clearStats } = useStatsHistory()
 
   const isDragging = useRef(false)
   const dragStart = useRef({ x: 0, y: 0, vx: 0, vy: 0 })
@@ -72,12 +76,13 @@ export default function App() {
   const onSnapshot = useCallback((snap: WorldSnapshot) => {
     snapshotRef.current = snap
     setStats(snap.stats)
+    pushStats(snap.stats)
     if (selectedIdRef.current !== null) {
       const found = snap.cells.find(c => c.id === selectedIdRef.current)
       if (found) setSelectedCell(found)
       else { setSelectedCell(null); selectedIdRef.current = null }
     }
-  }, [])
+  }, [pushStats])
 
   const { reset: resetSim, stepOnce, addCluster, inject, seed, kill, sendCommand } = useSimulation({ onSnapshot, paused, speed })
 
@@ -217,6 +222,7 @@ export default function App() {
 
   const handleReset = () => {
     setBarriers([])
+    clearStats()
     resetSim()
   }
 
@@ -292,6 +298,12 @@ export default function App() {
       </div>
 
       <div id="tip">scroll to zoom &nbsp;|&nbsp; drag to pan<br />click cell to inspect<br />wall: drag to draw, right-click to remove</div>
+
+      <button id="stats-toggle" onClick={() => setStatsOpen(o => !o)} className={statsOpen ? 'active' : ''}>
+        {statsOpen ? '▶ Stats' : '◀ Stats'}
+      </button>
+
+      <StatsPanel historyRef={statsHistory} currentStats={stats} open={statsOpen} />
     </div>
   )
 }
