@@ -209,3 +209,49 @@ button.active {
   background: rgba(240, 248, 240, 0.92);
   border-color: #8aaa8a;
 }
+
+/* ── Record panel ── */
+#record-panel {
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.72);
+  border: 1px solid rgba(80, 120, 80, 0.5);
+  border-radius: 8px;
+  padding: 6px 10px;
+  z-index: 50;
+}
+
+#record-panel button {
+  font-size: 11px;
+  padding: 3px 8px;
+}
+
+.rec-btn.active {
+  border-color: #cc4444 !important;
+  color: #ff8888 !important;
+  animation: rec-pulse 1s ease-in-out infinite;
+}
+
+@keyframes rec-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.rec-counter {
+  font-size: 10px;
+  color: rgba(140, 200, 140, 0.8);
+  font-family: 'Courier New', monospace;
+  min-width: 60px;
+}
+
+.replay-slider {
+  width: 140px;
+  height: 4px;
+  cursor: pointer;
+  accent-color: #4aaa4a;
+}

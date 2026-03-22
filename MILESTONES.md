@@ -10,8 +10,8 @@
 | 6 | adversarial-organisms | Predator = toxin∧flagella; engulf smaller prey, faster movement, crimson visual treatment | done | feature/adversarial-organisms | 91/91 tests |
 | 7 | extended-genome | 32-bit genome, membrane permeability, signalling, multicellular differentiation genes | done | feature/extended-genome | 113/113 tests |
 | 8 | chemical-gradients | Nutrient concentration heatmap layer, gradient chemotaxis, signalling molecule diffusion | done | feature/chemical-gradients | 126/126 tests |
-| 9 | fluorescence-mode | Third render mode, GFP-style emission by expressed genes, configurable channel mapping | in-progress | feature/fluorescence-mode | |
-| 10 | replay-export | World state snapshot recording, replay at any speed, PNG/video export | planned | — | |
+| 9 | fluorescence-mode | Third render mode, GFP-style emission by expressed genes, configurable channel mapping | done | feature/fluorescence-mode | 126/126 tests |
+| 10 | replay-export | World state snapshot recording, replay at any speed, PNG/video export | in-progress | feature/replay-export | |
 
 ---
 

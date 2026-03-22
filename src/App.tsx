@@ -10,7 +10,10 @@ import type { SimMode, SimSpeed } from './ui/hooks/useSimulation.js'
 import { useStatsHistory } from './ui/hooks/useStatsHistory.js'
 import { StatsPanel } from './ui/panels/StatsPanel.js'
 import { GenomeViewer } from './ui/panels/GenomeViewer.js'
+import { SnapshotRing, exportPNG, recordWebM } from './recording/recorder.js'
 import './App.css'
+
+const RECORD_CAPACITY = 600  // ~10 s at 60 fps
 
 const WORLD_W = 3200
 const WORLD_H = 3200
@@ -35,6 +38,16 @@ export default function App() {
   const [statsOpen, setStatsOpen] = useState(false)
   const [genomeViewerOpen, setGenomeViewerOpen] = useState(false)
   const { history: statsHistory, push: pushStats, clear: clearStats } = useStatsHistory()
+
+  // Recording & replay
+  const ringRef = useRef<SnapshotRing>(new SnapshotRing(RECORD_CAPACITY))
+  const [isRecording, setIsRecording] = useState(false)
+  const [isReplaying, setIsReplaying] = useState(false)
+  const [replayIndex, setReplayIndex] = useState(0)
+  const [isCapturingVideo, setIsCapturingVideo] = useState(false)
+  const stopVideoRef = useRef<(() => void) | null>(null)
+  const replayRafRef = useRef<number>(0)
+  const isRecordingRef = useRef(false)
 
   const isDragging = useRef(false)
   const dragStart = useRef({ x: 0, y: 0, vx: 0, vy: 0 })
@@ -79,6 +92,7 @@ export default function App() {
     snapshotRef.current = snap
     setStats(snap.stats)
     pushStats(snap.stats)
+    if (isRecordingRef.current) ringRef.current.push(snap)
     if (selectedIdRef.current !== null) {
       const found = snap.cells.find(c => c.id === selectedIdRef.current)
       if (found) setSelectedCell(found)
@@ -95,6 +109,68 @@ export default function App() {
   const setFieldMode = (fm: FieldMode) => {
     setFieldModeState(fm)
     compositorRef.current?.setFieldMode(fm)
+  }
+
+  // ── Recording & replay handlers ──
+
+  const toggleRecord = () => {
+    if (isRecording) {
+      isRecordingRef.current = false
+      setIsRecording(false)
+    } else {
+      ringRef.current.clear()
+      isRecordingRef.current = true
+      setIsRecording(true)
+    }
+  }
+
+  const startReplay = () => {
+    if (ringRef.current.length === 0) return
+    setIsReplaying(true)
+    setReplayIndex(0)
+    // Replay loop: step through snapshots at ~30fps independent of sim speed
+    const step = () => {
+      setReplayIndex(i => {
+        const next = i + 1
+        if (next >= ringRef.current.length) {
+          setIsReplaying(false)
+          return i
+        }
+        snapshotRef.current = ringRef.current.get(next)
+        replayRafRef.current = requestAnimationFrame(step)
+        return next
+      })
+    }
+    snapshotRef.current = ringRef.current.get(0)
+    replayRafRef.current = requestAnimationFrame(step)
+  }
+
+  const stopReplay = () => {
+    cancelAnimationFrame(replayRafRef.current)
+    setIsReplaying(false)
+  }
+
+  const scrubReplay = (i: number) => {
+    cancelAnimationFrame(replayRafRef.current)
+    setIsReplaying(false)
+    setReplayIndex(i)
+    if (i < ringRef.current.length) snapshotRef.current = ringRef.current.get(i)
+  }
+
+  const handleExportPNG = () => {
+    if (canvasRef.current) exportPNG(canvasRef.current)
+  }
+
+  const handleExportVideo = () => {
+    if (!canvasRef.current || isCapturingVideo) return
+    setIsCapturingVideo(true)
+    const stop = recordWebM(canvasRef.current, 10_000, () => setIsCapturingVideo(false))
+    stopVideoRef.current = stop
+  }
+
+  const stopVideo = () => {
+    stopVideoRef.current?.()
+    stopVideoRef.current = null
   }
 
   const screenToWorld = (sx: number, sy: number): [number, number] => {
@@ -305,6 +381,38 @@ export default function App() {
       </div>
 
       <div id="tip">scroll to zoom &nbsp;|&nbsp; drag to pan<br />click cell to inspect<br />wall: drag to draw, right-click to remove</div>
+
+      <div id="record-panel">
+        <button className={isRecording ? 'active rec-btn' : 'rec-btn'} onClick={toggleRecord}>
+          {isRecording ? '⏹ Stop' : '⏺ Record'}
+        </button>
+        {isRecording && (
+          <span className="rec-counter">{ringRef.current.length} / {RECORD_CAPACITY}</span>
+        )}
+        {!isRecording && ringRef.current.length > 0 && !isReplaying && (
+          <button onClick={startReplay}>▶ Replay</button>
+        )}
+        {isReplaying && (
+          <>
+            <button onClick={stopReplay}>⏹</button>
+            <input
+              type="range"
+              min={0}
+              max={ringRef.current.length - 1}
+              value={replayIndex}
+              onChange={e => scrubReplay(Number(e.target.value))}
+              className="replay-slider"
+            />
+            <span className="rec-counter">{replayIndex} / {ringRef.current.length - 1}</span>
+          </>
+        )}
+        <button onClick={handleExportPNG}>PNG</button>
+        {typeof MediaRecorder !== 'undefined' && (
+          isCapturingVideo
+            ? <button className="active" onClick={stopVideo}>⏹ Video</button>
+            : <button onClick={handleExportVideo}>WebM 10s</button>
+        )}
+      </div>
 
       <button id="stats-toggle" onClick={() => setStatsOpen(o => !o)} className={statsOpen ? 'active' : ''}>
         {statsOpen ? '▶ Stats' : '◀ Stats'}
