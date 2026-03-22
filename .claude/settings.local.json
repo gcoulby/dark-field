@@ -1,0 +1,65 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout:*)",
+      "Bash(git checkout -b:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git merge:*)",
+      "Bash(git push:*)",
+      "Bash(git branch:*)",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git stash:*)",
+
+      "Bash(pnpm install:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm run:*)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm exec:*)",
+      "Bash(pnpm create:*)",
+      "Bash(pnpm dlx:*)",
+
+      "Bash(npx:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(npm create:*)",
+
+      "Bash(node:*)",
+      "Bash(tsc:*)",
+      "Bash(vite:*)",
+      "Bash(vitest:*)",
+
+      "Bash(mkdir:*)",
+      "Bash(mkdir -p:*)",
+      "Bash(touch:*)",
+      "Bash(cp:*)",
+      "Bash(cp -r:*)",
+      "Bash(mv:*)",
+      "Bash(rm:*)",
+      "Bash(rm -rf:*)",
+      "Bash(cat:*)",
+      "Bash(echo:*)",
+      "Bash(printf:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(sed:*)",
+      "Bash(chmod:*)",
+
+      "Bash(curl:*)",
+      "Bash(wget:*)"
+    ],
+    "deny": [
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard HEAD~:*)",
+      "Bash(rm -rf /:*)",
+      "Bash(rm -rf ~:*)",
+      "Bash(curl * | bash:*)",
+      "Bash(wget * | bash:*)"
+    ]
+  }
+}
