@@ -46,9 +46,11 @@ describe('genome bit regions consistency', () => {
     }
   })
 
-  it('lineage bits (14-15) match traitsFrom.lineage', () => {
+  it('lineage low bits (14-15) and high bits (26-27) combine into traitsFrom.lineage', () => {
     for (const g of testGenomes) {
-      expect(getBits(g, 14, 2)).toBe(traitsFrom(g).lineage)
+      const lo = getBits(g, 14, 2)
+      const hi = getBits(g, 26, 2)
+      expect((hi << 2) | lo).toBe(traitsFrom(g).lineage)
     }
   })
 
@@ -73,23 +75,30 @@ describe('genome bit regions consistency', () => {
     }
   })
 
-  it('all 16 bits are accounted for by regions', () => {
-    // Regions: 0-1(2), 2-3(2), 4-5(2), 6(1), 7(1), 8-9(2), 10(1), 11(1), 12-13(2), 14-15(2)
-    // Total = 2+2+2+1+1+2+1+1+2+2 = 16
+  it('all 30 active bits are accounted for by regions', () => {
+    // Bits 0-29 (bits 30-31 reserved). Total = 2+2+2+1+1+2+1+1+2+2+2+2+1+1+2+2+2+2 = 30
     const regionDefs = [
-      { start: 0, length: 2 },
-      { start: 2, length: 2 },
-      { start: 4, length: 2 },
-      { start: 6, length: 1 },
-      { start: 7, length: 1 },
-      { start: 8, length: 2 },
-      { start: 10, length: 1 },
-      { start: 11, length: 1 },
-      { start: 12, length: 2 },
-      { start: 14, length: 2 },
+      { start: 0, length: 2 },  // adhesion
+      { start: 2, length: 2 },  // metabolism
+      { start: 4, length: 2 },  // size
+      { start: 6, length: 1 },  // photo
+      { start: 7, length: 1 },  // flagella
+      { start: 8, length: 2 },  // div threshold
+      { start: 10, length: 1 }, // chemotaxis
+      { start: 11, length: 1 }, // toxin
+      { start: 12, length: 2 }, // shape
+      { start: 14, length: 2 }, // lineage lo
+      { start: 16, length: 2 }, // permeability
+      { start: 18, length: 2 }, // role
+      { start: 20, length: 1 }, // emitter
+      { start: 21, length: 1 }, // receiver
+      { start: 22, length: 2 }, // signal type
+      { start: 24, length: 2 }, // pigmentation
+      { start: 26, length: 2 }, // lineage hi
+      { start: 28, length: 2 }, // size modifier
     ]
     const totalBits = regionDefs.reduce((sum, r) => sum + r.length, 0)
-    expect(totalBits).toBe(16)
+    expect(totalBits).toBe(30)
 
     // No overlap
     const covered = new Set<number>()
@@ -99,6 +108,6 @@ describe('genome bit regions consistency', () => {
         covered.add(i)
       }
     }
-    expect(covered.size).toBe(16)
+    expect(covered.size).toBe(30)
   })
 })

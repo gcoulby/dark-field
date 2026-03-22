@@ -4,6 +4,7 @@ import { makeNutrient } from './nutrients.js'
 import type { Nutrient } from './nutrients.js'
 import { buildGrid, nearby } from './physics.js'
 import { resolveCircleBarrier, circleOverlapsBarrier } from './islands.js'
+import { permeabilityMultiplier } from './genome.js'
 import type { Barrier } from './islands.js'
 
 export const WORLD_W = 3200
@@ -141,6 +142,22 @@ export function stepWorld(world: WorldState): void {
       }
     }
 
+    // Signalling: receiver cells are attracted to nearby emitters on the same channel
+    if (t.receiver) {
+      const nearCells = nearby(cellGrid, cell.x, cell.y, 150)
+      for (const other of nearCells) {
+        if (other === cell || !other.alive) continue
+        if (!other.traits.emitter) continue
+        if (other.traits.signalType !== t.signalType) continue
+        const dx = other.x - cell.x
+        const dy = other.y - cell.y
+        const d = Math.sqrt(dx * dx + dy * dy)
+        if (d < 0.001) continue
+        cell.vx += (dx / d) * 0.06
+        cell.vy += (dy / d) * 0.06
+      }
+    }
+
     // Bond spring forces
     for (const b of cell.bonds) {
       if (!b.alive) continue
@@ -154,8 +171,17 @@ export function stepWorld(world: WorldState): void {
       cell.vy += (dy / d) * force
     }
 
-    // Speed cap (predators are faster)
-    const maxSpd = t.isPredator ? 2.4 : t.flagella ? 1.6 : 0.9
+    // Role-based modifications
+    // Wall cells: resist movement (higher effective drag)
+    if (t.role === 'wall') {
+      cell.vx *= 0.5
+      cell.vy *= 0.5
+    }
+    // Sensor cells: enhanced chemotaxis range (applied earlier — not here)
+    // Reproductive cells: division energy halved (applied in division check below)
+
+    // Speed cap (predators are faster; wall cells are slower)
+    const maxSpd = t.isPredator ? 2.4 : t.role === 'wall' ? 0.3 : t.flagella ? 1.6 : 0.9
     const spd = Math.sqrt(cell.vx ** 2 + cell.vy ** 2)
     if (spd > maxSpd) {
       cell.vx *= maxSpd / spd
@@ -216,12 +242,13 @@ export function stepWorld(world: WorldState): void {
       }
     }
 
-    // Eat nutrients
+    // Eat nutrients — membrane permeability scales absorption
+    const permMult = permeabilityMultiplier(t.permeability)
     const nearNuts = nearby(nutGrid, cell.x, cell.y, t.radius + 14)
     for (const n of nearNuts) {
       if (!n.alive) continue
       if (Math.sqrt((n.x - cell.x) ** 2 + (n.y - cell.y) ** 2) < t.radius + 8) {
-        cell.energy += n.energy * t.metabolism
+        cell.energy += n.energy * t.metabolism * permMult
         n.alive = false
       }
     }

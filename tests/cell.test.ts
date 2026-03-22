@@ -11,7 +11,7 @@ describe('makeCell', () => {
     expect(cell.generation).toBe(0)
     expect(cell.bonds).toEqual([])
     expect(cell.genome).toBeGreaterThanOrEqual(0)
-    expect(cell.genome).toBeLessThanOrEqual(0xFFFF)
+    expect(cell.genome).toBeLessThanOrEqual(0x3FFFFFFF) // 30-bit genome
     expect(cell.energy).toBeGreaterThan(0)
     expect(cell.traits.radius).toBeGreaterThan(0)
   })
