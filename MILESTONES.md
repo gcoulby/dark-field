@@ -5,7 +5,7 @@
 | 1 | scaffold | Vite/React/TS project, worker architecture, port HTML prototype to typed modules, Vitest, GitHub Actions deploy | done | feature/scaffold | 38/38 tests passing |
 | 2 | parallax-layers | Multi-layer canvas compositor, background drift particles, nutrient wash layer, parallax pan/zoom | done | feature/parallax-layers | 50/50 tests |
 | 3 | islands-barriers | AABB barrier editor (drag to place, right-click remove), barrier collision, nutrient blocking, visual treatment | done | feature/islands-barriers | 64/64 tests |
-| 4 | stats-panel | Slide-in panel: species count over time, dominant lineage, genome frequency charts, energy budget | planned | — | |
+| 4 | stats-panel | Slide-in panel: cells/colonies/species over-time charts, current stat rows, toggle button | done | feature/stats-panel | 72/72 tests |
 | 5 | dna-rna-viewer | Click-cell genome breakdown: bit ranges labelled, current expression, mutation delta | planned | — | |
 | 6 | adversarial-organisms | Predator genome flag, engulf mechanic, prey detection, visual differentiation | planned | — | |
 | 7 | extended-genome | 32-bit genome, membrane permeability, signalling, multicellular differentiation genes | planned | — | Depends on 6 |
