@@ -6,6 +6,7 @@ import { buildGrid, nearby } from './physics.js'
 import { resolveCircleBarrier, circleOverlapsBarrier } from './islands.js'
 import { permeabilityMultiplier } from './genome.js'
 import type { Barrier } from './islands.js'
+import { computeNutrientGrid, gradientAt, GRID_CELL } from './nutrientGrid.js'
 
 export const WORLD_W = 3200
 export const WORLD_H = 3200
@@ -115,6 +116,7 @@ export function stepWorld(world: WorldState): void {
   const aliveNuts = world.nutrients.filter(n => n.alive)
   const nutGrid = buildGrid(aliveNuts, n => n.x, n => n.y)
   const cellGrid = buildGrid(aliveCells, c => c.x, c => c.y)
+  const densityGrid = computeNutrientGrid(aliveNuts)
   const newCells: Cell[] = []
 
   for (const cell of aliveCells) {
@@ -125,20 +127,16 @@ export function stepWorld(world: WorldState): void {
     cell.vx += (Math.random() - 0.5) * 0.12
     cell.vy += (Math.random() - 0.5) * 0.12
 
-    // Chemotaxis
+    // Chemotaxis — gradient ascent on the density field
+    // Sensor cells sample at wider radius for enhanced sensing
     if (t.chemotaxis) {
-      const ns = nearby(nutGrid, cell.x, cell.y, 130)
-      let bestDist = Infinity
-      let bestNut: Nutrient | null = null
-      for (const n of ns) {
-        if (!n.alive) continue
-        const d2 = (n.x - cell.x) ** 2 + (n.y - cell.y) ** 2
-        if (d2 < bestDist) { bestDist = d2; bestNut = n }
-      }
-      if (bestNut) {
-        const d = Math.sqrt(bestDist)
-        cell.vx += (bestNut.x - cell.x) / d * 0.09
-        cell.vy += (bestNut.y - cell.y) / d * 0.09
+      const step = t.role === 'sensor' ? GRID_CELL * 2.5 : GRID_CELL
+      const [gx, gy] = gradientAt(densityGrid, cell.x, cell.y, step)
+      const mag = Math.sqrt(gx * gx + gy * gy)
+      if (mag > 0.001) {
+        const strength = t.role === 'sensor' ? 0.13 : 0.09
+        cell.vx += (gx / mag) * strength
+        cell.vy += (gy / mag) * strength
       }
     }
 

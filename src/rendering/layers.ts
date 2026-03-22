@@ -93,7 +93,7 @@ export class LayerCompositor {
 
     // Layer 2: nutrient wash (parallax 0.45)
     const vp2 = parallaxViewport(vp, LAYER_FACTORS[2])
-    drawNutrientWash(this.offCtxs[2]!, snapshot.nutrients, makeWorldToScreen(vp2), vp2.vscale, W, H, this.fieldMode)
+    drawNutrientWash(this.offCtxs[2]!, snapshot, makeWorldToScreen(vp2), vp2.vscale, W, H, this.fieldMode)
 
     // Layer 3: cells (world parallax = 1.0)
     const vp3 = parallaxViewport(vp, LAYER_FACTORS[3])

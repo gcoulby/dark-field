@@ -7,6 +7,7 @@ import type { WorldState } from './world.js'
 import type { SimStats } from './stats.js'
 import { getStats } from './stats.js'
 import type { Barrier } from './islands.js'
+import { computeNutrientGrid, GRID_W, GRID_H } from './nutrientGrid.js'
 
 export interface CellSnapshot {
   id: number
@@ -33,9 +34,15 @@ export interface WorldSnapshot {
   nutrients: NutrientSnapshot[]
   barriers: Barrier[]
   stats: SimStats
+  /** Flat density grid (GRID_W × GRID_H) for heatmap rendering */
+  nutrientGrid: number[]
+  gridW: number
+  gridH: number
 }
 
 export function serializeWorld(world: WorldState): WorldSnapshot {
+  const aliveNuts = world.nutrients.filter(n => n.alive)
+  const grid = computeNutrientGrid(aliveNuts)
   return {
     barriers: world.barriers,
     cells: world.cells.map(c => ({
@@ -53,5 +60,8 @@ export function serializeWorld(world: WorldState): WorldSnapshot {
     })),
     nutrients: world.nutrients.map(n => ({ x: n.x, y: n.y, energy: n.energy })),
     stats: getStats(world),
+    nutrientGrid: Array.from(grid),
+    gridW: GRID_W,
+    gridH: GRID_H,
   }
 }
