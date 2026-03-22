@@ -2,16 +2,16 @@
 
 | # | Slug | Description | Status | Branch | Notes |
 |---|------|-------------|--------|--------|-------|
-| 1 | scaffold | Vite/React/TS project, worker architecture, port HTML prototype to typed modules, Vitest, GitHub Actions deploy | planned | — | Seed from life-sim.html |
-| 2 | parallax-layers | Multi-layer canvas compositor, background drift particles, nutrient wash layer, parallax pan/zoom | planned | — | |
-| 3 | islands-barriers | Polygon barrier editor, barrier collision, isolated nutrient budgets, visual treatment | planned | — | |
-| 4 | stats-panel | Slide-in panel: species count over time, dominant lineage, genome frequency charts, energy budget | planned | — | |
-| 5 | dna-rna-viewer | Click-cell genome breakdown: bit ranges labelled, current expression, mutation delta | planned | — | |
-| 6 | adversarial-organisms | Predator genome flag, engulf mechanic, prey detection, visual differentiation | planned | — | |
-| 7 | extended-genome | 32-bit genome, membrane permeability, signalling, multicellular differentiation genes | planned | — | Depends on 6 |
-| 8 | chemical-gradients | Nutrient concentration heatmap layer, gradient chemotaxis, signalling molecule diffusion | planned | — | |
-| 9 | fluorescence-mode | Third render mode, GFP-style emission by expressed genes, configurable channel mapping | planned | — | |
-| 10 | replay-export | World state snapshot recording, replay at any speed, PNG/video export | planned | — | |
+| 1 | scaffold | Vite/React/TS project, worker architecture, port HTML prototype to typed modules, Vitest, GitHub Actions deploy | done | feature/scaffold | 38/38 tests passing |
+| 2 | parallax-layers | Multi-layer canvas compositor, background drift particles, nutrient wash layer, parallax pan/zoom | done | feature/parallax-layers | 50/50 tests |
+| 3 | islands-barriers | AABB barrier editor (drag to place, right-click remove), barrier collision, nutrient blocking, visual treatment | done | feature/islands-barriers | 64/64 tests |
+| 4 | stats-panel | Slide-in panel: cells/colonies/species over-time charts, current stat rows, toggle button | done | feature/stats-panel | 72/72 tests |
+| 5 | dna-rna-viewer | Click-cell genome breakdown: bit bitmap, gene table (label/bits/expression), trait summary | done | feature/dna-rna-viewer | 83/83 tests |
+| 6 | adversarial-organisms | Predator = toxin∧flagella; engulf smaller prey, faster movement, crimson visual treatment | done | feature/adversarial-organisms | 91/91 tests |
+| 7 | extended-genome | 32-bit genome, membrane permeability, signalling, multicellular differentiation genes | done | feature/extended-genome | 113/113 tests |
+| 8 | chemical-gradients | Nutrient concentration heatmap layer, gradient chemotaxis, signalling molecule diffusion | done | feature/chemical-gradients | 126/126 tests |
+| 9 | fluorescence-mode | Third render mode, GFP-style emission by expressed genes, configurable channel mapping | done | feature/fluorescence-mode | 126/126 tests |
+| 10 | replay-export | World state snapshot recording, replay at any speed, PNG/video export | done | feature/replay-export | 137/137 tests |
 
 ---
 

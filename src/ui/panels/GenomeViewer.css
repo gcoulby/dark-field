@@ -1,0 +1,126 @@
+.genome-viewer {
+  margin-top: 10px;
+  border-top: 1px solid #1a3a1a;
+  padding-top: 10px;
+}
+
+.gv-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.gv-title {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: #3a6a3a;
+  text-transform: uppercase;
+}
+
+.gv-close {
+  background: none;
+  border: none;
+  color: #3a6a3a;
+  font-size: 10px;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.gv-close:hover {
+  color: #8ab88a;
+}
+
+.gv-bitmap {
+  display: block;
+  width: 100%;
+  height: 24px;
+  image-rendering: pixelated;
+  border: 1px solid #1a3a1a;
+  margin-bottom: 5px;
+}
+
+.gv-binary {
+  font-size: 8px;
+  color: #3a5a3a;
+  letter-spacing: 0.15em;
+  margin-bottom: 8px;
+  font-family: 'Courier New', monospace;
+}
+
+.gv-table {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0;
+  font-size: 9px;
+}
+
+.gv-row {
+  display: contents;
+}
+
+.gv-row > * {
+  padding: 2px 3px;
+  line-height: 1.7;
+}
+
+.gv-gene-label {
+  color: #4a7a4a;
+}
+
+.gv-gene-bits {
+  color: #3a5a3a;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+
+.gv-gene-value {
+  color: #8ab88a;
+  text-align: right;
+}
+
+.gv-footer {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  font-size: 9px;
+  gap: 1px 4px;
+}
+
+.gv-label {
+  color: #4a7a4a;
+}
+
+.gv-val {
+  color: #8ab88a;
+  text-align: right;
+}
+
+/* Light field */
+.lightfield .genome-viewer {
+  border-top-color: #8aaa8a;
+}
+
+.lightfield .gv-title,
+.lightfield .gv-close {
+  color: #2a5a2a;
+}
+
+.lightfield .gv-binary {
+  color: #2a5a2a;
+}
+
+.lightfield .gv-gene-label,
+.lightfield .gv-label {
+  color: #2a5a2a;
+}
+
+.lightfield .gv-gene-value,
+.lightfield .gv-val {
+  color: #0a3a0a;
+}
+
+.lightfield .gv-bitmap {
+  border-color: #8aaa8a;
+}
