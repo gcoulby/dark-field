@@ -34,7 +34,12 @@ export default function App() {
   const [speed, setSpeed] = useState<SimSpeed>(1)
   const [selectedCell, setSelectedCell] = useState<CellSnapshot | null>(null)
   const [barriers, setBarriers] = useState<Barrier[]>([])
-  const [stats, setStats] = useState({ cellCount: 0, colonyCount: 0, nutrientCount: 0, maxGeneration: 0, speciesCount: 0, tick: 0 })
+  const [stats, setStats] = useState({
+    cellCount: 0, colonyCount: 0, nutrientCount: 0, maxGeneration: 0,
+    speciesCount: 0, tick: 0, avgGeneration: 0, avgEnergy: 0,
+    genDistribution: [0, 0, 0, 0, 0] as [number, number, number, number, number],
+    topGenomes: [] as import('./simulation/stats.js').SimStats['topGenomes'],
+  })
   const [statsOpen, setStatsOpen] = useState(false)
   const [genomeViewerOpen, setGenomeViewerOpen] = useState(false)
   const { history: statsHistory, push: pushStats, clear: clearStats } = useStatsHistory()
