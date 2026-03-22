@@ -158,6 +158,12 @@ button.active {
   border-right: none;
 }
 
+.gv-open-btn {
+  margin-top: 6px;
+  width: 100%;
+  font-size: 9px;
+}
+
 #stats-toggle {
   position: absolute;
   top: 16px;
