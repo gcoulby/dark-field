@@ -2,6 +2,29 @@
 
 ---
 
+## [2026-03-22] Milestone: visual-realism
+
+### Plan
+Improve cell rendering to look like real dark field microscopy images (concentric diffraction rings, dark interior, no polygon shapes). Extend stats with generation distribution, top genomes, average generation/energy. Update StatsPanel UI.
+
+### Implementation notes
+- `cellLayer.ts` fully rewritten: all cells use `ctx.arc`/`ctx.ellipse` (shape=1 elongated). New `drawDarkCell` helper draws: outer halo → dark body → primary rim → secondary ring → optional tertiary ring → nucleus → photo organelle → flagella → selection ring.
+- Hues derived from lineage: `(lineage * 22.5) % 360` giving 16 evenly-spaced colours. Predators forced to hue 5 (crimson).
+- `stats.ts` extended: `SimStats` gains `avgGeneration`, `avgEnergy`, `genDistribution` (5 buckets: 0, 1-5, 6-20, 21-100, 101+), `topGenomes` (top 5 by frequency, with lineage for colour).
+- `StatsPanel.tsx` gains: generation distribution bar chart, dominant genomes table (colour swatch + lineage + hex genome + count), avg generation over time chart.
+- `recorder.test.ts` `makeSnap` updated to include new `SimStats` fields.
+
+### Test results
+137/137 passing.
+
+### Evaluation
+Cells now look like real dark field microscopy — circular/elliptical forms with concentric bright rims on a near-black body. Stats panel now tells a much richer story. No regressions.
+
+### Next milestone
+Consider: improving multicellular mechanics (stronger colony bonds, filamentous chains, cell differentiation roles visible in rendering). Also: barrier islands creating visible speciation over longer runs.
+
+---
+
 ## [2026-03-22] Milestone: replay-export
 
 ### Plan
