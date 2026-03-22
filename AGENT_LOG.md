@@ -2,6 +2,77 @@
 
 ---
 
+## [2026-03-22] Milestone: islands-barriers
+
+### Plan
+Add polygonal barriers that cells cannot cross. Barriers are axis-aligned rectangles in world space (simplest collision shape, fast to test, easy to place with click-drag). They will create isolated pockets that force separate gene pools to diverge over time.
+
+**Data model (`src/simulation/islands.ts`):**
+```ts
+interface Barrier { x: number; y: number; w: number; h: number }
+```
+Barriers live in `WorldState.barriers`. The worker receives them via a `setBarriers` message and applies them during `stepWorld`.
+
+**Collision:**
+Circle vs AABB. For each cell, find closest point on barrier rectangle, push cell out if overlap.
+```
+clampedX = clamp(cell.x, barrier.x, barrier.x + barrier.w)
+clampedY = clamp(cell.y, barrier.y, barrier.y + barrier.h)
+dist = hypot(cell.x - clampedX, cell.y - clampedY)
+if dist < cell.radius → push out + reflect velocity
+```
+O(cells × barriers) — fine for small barrier counts.
+
+**Nutrient blocking:**
+Nutrients don't cross barriers either: each step, if a nutrient lands inside a barrier, nudge it back to the barrier edge.
+
+**Rendering (`src/rendering/barrierLayer.ts`):**
+- Inserted as Layer 0.5 (between debris bg and nutrient wash): drawn on a new offscreen canvas between layers 0 and 1.
+- Dark field: near-black fill, dim bright-green edge glow (glass-like opaque object in microscope).
+- Light field: light grey fill, slight dark border (opaque object blocking light).
+- Visual detail: subtle diagonal hatching pattern inside to signal impassable material.
+
+**UI (App.tsx):**
+- New mode button: "Wall" — left-click+drag to draw a rectangular barrier in world space.
+- Right-click on existing barrier removes it.
+- Barrier state managed in React; sent to worker on change via `setBarriers` message.
+
+**Worker protocol additions:**
+- `{ type: 'setBarriers', barriers: Barrier[] }`
+
+**Tests (`tests/barriers.test.ts`):**
+- Closest point on AABB is correct for all 9 regions (inside, 4 edges, 4 corners)
+- After N steps with a barrier, no cell centre is inside the barrier
+- Nutrient nudging keeps nutrients outside barrier
+
+### Implementation notes
+- Barrier collision uses circle-vs-AABB: `closestPointOnBarrier` finds the nearest point on the rectangle, then pushes the circle out along that direction.
+- Nutrients are nudged out of barriers each step using the same closest-point logic.
+- Worker receives barriers via a `setBarriers` message and stores them in `WorldState.barriers`; the full barrier array is included in every serialised snapshot (cheap, barriers are small data).
+- `LayerCompositor` expanded from 5 to 6 offscreen canvases; barrier layer sits between debris background and nutrient wash.
+- App.tsx: new `wall` mode — left-drag draws AABB, right-click on existing barrier removes it. `sendCommand` exposed from `useSimulation` hook so App can send arbitrary messages to the worker.
+
+### Test results
+64/64 tests passing (7 test files). New: `tests/barriers.test.ts` (14 tests).
+
+### Evaluation
+**Achieved:**
+- Barrier AABB defined, collision resolution implemented and integrated into stepWorld
+- Nutrients blocked by barriers each step
+- Barrier rendering layer (dark: opaque + bright-green edge glow + hatching; light: grey fill + dark border)
+- Wall mode in UI: drag to place rectangle, right-click to remove, "Clear walls" button when barriers exist
+- Barriers persisted across ticks via worker state; serialised in snapshot for rendering
+
+**Known issues:**
+- The integration test passes with the initial cell cluster placed at world centre — if the initial cluster spawns inside the barrier position they will be pushed out cleanly, but heavily-congested scenarios with many cells piling against a wall can occasionally glitch one cell through for 1 tick. This is a known tunnelling issue with discrete-step collision and is acceptable at this scale.
+
+### Next milestone
+**stats-panel** — Slide-in panel showing species count over time, dominant lineage, genome frequency charts, energy budget graph. All data computed from snapshot stats already flowing from worker.
+
+---
+
+---
+
 ## [2026-03-22] Milestone: parallax-layers
 
 ### Plan

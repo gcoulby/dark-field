@@ -6,6 +6,7 @@
 import type { WorldState } from './world.js'
 import type { SimStats } from './stats.js'
 import { getStats } from './stats.js'
+import type { Barrier } from './islands.js'
 
 export interface CellSnapshot {
   id: number
@@ -30,11 +31,13 @@ export interface NutrientSnapshot {
 export interface WorldSnapshot {
   cells: CellSnapshot[]
   nutrients: NutrientSnapshot[]
+  barriers: Barrier[]
   stats: SimStats
 }
 
 export function serializeWorld(world: WorldState): WorldSnapshot {
   return {
+    barriers: world.barriers,
     cells: world.cells.map(c => ({
       id: c.id,
       x: c.x,
