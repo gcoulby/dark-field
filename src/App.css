@@ -1,0 +1,204 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+.app {
+  background: #000;
+  color: #c8d4c0;
+  font-family: 'Courier New', monospace;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  user-select: none;
+}
+
+#canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#bloom-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+#hud {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.hud-title {
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  color: #3a5c3a;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.hud-stat {
+  font-size: 11px;
+  color: #4a7a4a;
+  line-height: 1.8;
+}
+
+.hud-stat span {
+  color: #8ab88a;
+}
+
+#controls {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  z-index: 10;
+  display: flex;
+  gap: 6px;
+  flex-direction: column;
+}
+
+.ctrl-group {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.mode-label {
+  font-size: 9px;
+  color: #3a5a3a;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 2px;
+}
+
+button {
+  background: rgba(20, 40, 20, 0.7);
+  border: 1px solid #2a4a2a;
+  color: #6a9a6a;
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  padding: 5px 9px;
+  cursor: pointer;
+  transition: all 0.12s;
+  text-transform: uppercase;
+}
+
+button:hover {
+  background: rgba(30, 60, 30, 0.9);
+  border-color: #4a8a4a;
+  color: #aadaaa;
+}
+
+button.active {
+  background: rgba(40, 80, 40, 0.9);
+  border-color: #6aaa6a;
+  color: #cceecc;
+}
+
+#inspector {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 210px;
+  background: rgba(5, 12, 5, 0.88);
+  border: 1px solid #1a3a1a;
+  padding: 12px;
+  z-index: 10;
+}
+
+.inspector-title {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: #3a6a3a;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #1a3a1a;
+  padding-bottom: 5px;
+}
+
+.inspector-row {
+  font-size: 10px;
+  color: #4a7a4a;
+  line-height: 1.9;
+  display: flex;
+  justify-content: space-between;
+}
+
+.inspector-row span {
+  color: #8ab88a;
+}
+
+.genome-display {
+  margin-top: 8px;
+  font-size: 9px;
+  color: #3a5a3a;
+  letter-spacing: 0.08em;
+  word-break: break-all;
+  line-height: 1.7;
+}
+
+#tip {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  font-size: 9px;
+  color: #2a4a2a;
+  text-align: right;
+  line-height: 1.8;
+  pointer-events: none;
+}
+
+#field-toggle {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+}
+
+#field-toggle button:first-child {
+  border-right: none;
+}
+
+/* Light field overrides */
+.lightfield {
+  background: #e8eeea;
+  color: #2a4a2a;
+}
+
+.lightfield button {
+  background: rgba(220, 235, 220, 0.75);
+  border-color: #8aaa8a;
+  color: #2a5a2a;
+}
+
+.lightfield button:hover {
+  background: rgba(200, 225, 200, 0.9);
+}
+
+.lightfield button.active {
+  background: rgba(160, 200, 160, 0.9);
+  border-color: #4a8a4a;
+  color: #0a3a0a;
+}
+
+.lightfield .hud-stat {
+  color: #2a5a2a;
+}
+
+.lightfield .hud-stat span {
+  color: #0a3a0a;
+}
+
+.lightfield .hud-title {
+  color: #2a5a2a;
+}
+
+.lightfield #inspector {
+  background: rgba(240, 248, 240, 0.92);
+  border-color: #8aaa8a;
+}
