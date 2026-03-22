@@ -9,6 +9,7 @@ import { useSimulation } from './ui/hooks/useSimulation.js'
 import type { SimMode, SimSpeed } from './ui/hooks/useSimulation.js'
 import { useStatsHistory } from './ui/hooks/useStatsHistory.js'
 import { StatsPanel } from './ui/panels/StatsPanel.js'
+import { GenomeViewer } from './ui/panels/GenomeViewer.js'
 import './App.css'
 
 const WORLD_W = 3200
@@ -32,6 +33,7 @@ export default function App() {
   const [barriers, setBarriers] = useState<Barrier[]>([])
   const [stats, setStats] = useState({ cellCount: 0, colonyCount: 0, nutrientCount: 0, maxGeneration: 0, speciesCount: 0, tick: 0 })
   const [statsOpen, setStatsOpen] = useState(false)
+  const [genomeViewerOpen, setGenomeViewerOpen] = useState(false)
   const { history: statsHistory, push: pushStats, clear: clearStats } = useStatsHistory()
 
   const isDragging = useRef(false)
@@ -143,6 +145,7 @@ export default function App() {
       setSelectedCell(cell)
       selectedIdRef.current = cell?.id ?? null
       compositorRef.current?.setSelectedId(cell?.id ?? null)
+      if (cell) setGenomeViewerOpen(true)
     } else if (mode === 'wall') {
       wallDragStart.current = { wx, wy }
     } else if (mode === 'seed') {
@@ -266,7 +269,10 @@ export default function App() {
           <div className="inspector-row">Shape <span>{SHAPE_NAMES[inspectorTraits.shape]}</span></div>
           <div className="inspector-row">Adhesion <span>{['none', 'A', 'B', 'C'][inspectorTraits.adhesion]}</span></div>
           <div className="inspector-row">Metabolism <span>{inspectorTraits.metabolism.toFixed(2)}</span></div>
-          <div className="genome-display">{selectedCell.genome.toString(2).padStart(16, '0')}</div>
+          {genomeViewerOpen
+            ? <GenomeViewer genome={selectedCell.genome} onClose={() => setGenomeViewerOpen(false)} />
+            : <button className="gv-open-btn" onClick={() => setGenomeViewerOpen(true)}>View genome ▼</button>
+          }
         </div>
       )}
 
