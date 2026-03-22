@@ -2,6 +2,64 @@
 
 ---
 
+## [2026-03-22] Milestone: replay-export
+
+### Plan
+Give users the ability to record the simulation, replay it with a scrubber, and export frames as PNG or a 10-second WebM video clip.
+
+**SnapshotRing** — circular buffer holding up to 600 WorldSnapshot objects (~10 s at 60 fps). Old frames evicted automatically once capacity is reached. Tested exhaustively.
+
+**Recording** — toggled with a ⏺ button. Snapshots are pushed into the ring inside `onSnapshot` via a ref (no state write = no re-render per frame). Pulsing red animation signals active recording.
+
+**Replay** — on ▶ Replay: enter replay mode (sim still runs in worker, renderer shows stored frames), RAF loop steps through ring oldest-first. Timeline scrubber lets user jump to any frame. Stop or drag slider to exit.
+
+**Export PNG** — `canvas.toBlob` → `URL.createObjectURL` → programmatic `<a>` click.
+
+**Export WebM** — `canvas.captureStream(30)` + `MediaRecorder` → 10 s clip auto-downloaded. Stop button available mid-capture. Hidden if `MediaRecorder` is unavailable.
+
+### Implementation notes
+- Ring buffer uses a single `(oldest + i) % capacity` formula — no copying, O(1) access
+- Recording ref (`isRecordingRef`) avoids closure stale-state issue in `onSnapshot`
+- Replay RAF loop calls `setReplayIndex` with a functional updater so it reads current state
+
+### Test results
+137/137 tests passing. 11 new tests in `recorder.test.ts` covering SnapshotRing wrap-around, eviction, RangeError, clear/reuse, and capacity-1 edge case.
+
+### Evaluation
+All 10 milestones from the original CLAUDE.md roadmap are now complete. The sim has: full 30-bit genome with extended traits; three rendering modes (dark/light/fluoro); parallax compositor; AABB barriers; stats panel; DNA viewer; predator ecology; chemical gradient chemotaxis; replay & export.
+
+### Next milestone
+The roadmap is complete. Candidate additions:
+- **M11: signalling visualisation** — show signal channels as coloured diffusion halos around emitter cells
+- **M12: multi-island seeding presets** — a few curated starting configurations (e.g. two islands separated by a wide barrier to force rapid speciation)
+- **M13: performance pass** — profile the render loop, switch to typed arrays for nutrient/cell data, target consistent 60fps at 1500+ cells
+
+---
+
+## [2026-03-22] Milestone: chemical-gradients
+
+### Plan
+Replace the discrete per-nutrient chemotaxis (nearest-particle search) with gradient ascent on a pre-computed density field. Render the field as a smooth heatmap ImageData layer rather than discrete blobs.
+
+**Grid**: 50×50 bins at 64 world-units/cell → `computeNutrientGrid` builds a Float32Array each tick. `sampleGrid` (bilinear) and `gradientAt` (finite difference) allow smooth sampling anywhere in world space.
+
+**Chemotaxis**: Cells now call `gradientAt(densityGrid, x, y, step)` — sensor-role cells use a wider step (2.5×) and stronger pull. Direction is normalised gradient.
+
+**Rendering**: `drawNutrientWash` rewritten to build an ImageData of the grid, bilinearly interpolated onto a temporary OffscreenCanvas, then `drawImage`-scaled to the viewport. Green-teal in dark mode, blue-green in light.
+
+**Snapshot**: `WorldSnapshot` now includes `nutrientGrid`, `gridW`, `gridH` so the renderer uses the pre-computed grid rather than re-scanning nutrient positions.
+
+### Test results
+126/126 tests passing. 13 new tests in `nutrientGrid.test.ts`.
+
+### Evaluation
+Chemotaxis is noticeably smoother — cells no longer do discrete hops toward individual nutrients. The heatmap is a genuine improvement over the old blob approach. Gradient sensing works well at the ecosystem scale.
+
+### Next milestone
+M9: Fluorescence mode.
+
+---
+
 ## [2026-03-22] Milestone: extended-genome
 
 ### Plan
