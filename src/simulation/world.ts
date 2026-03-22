@@ -154,8 +154,8 @@ export function stepWorld(world: WorldState): void {
       cell.vy += (dy / d) * force
     }
 
-    // Speed cap
-    const maxSpd = t.flagella ? 1.6 : 0.9
+    // Speed cap (predators are faster)
+    const maxSpd = t.isPredator ? 2.4 : t.flagella ? 1.6 : 0.9
     const spd = Math.sqrt(cell.vx ** 2 + cell.vy ** 2)
     if (spd > maxSpd) {
       cell.vx *= maxSpd / spd
@@ -195,6 +195,23 @@ export function stepWorld(world: WorldState): void {
         } else if (d < minD) {
           cell.vx -= (dx / d) * (minD - d) * 0.18
           cell.vy -= (dy / d) * (minD - d) * 0.18
+        }
+      }
+    }
+
+    // Predator engulf: absorb smaller cells within radius
+    if (t.isPredator) {
+      for (const other of neighbours) {
+        if (other === cell || !other.alive) continue
+        if (other.traits.isPredator) continue // predators don't engulf each other
+        const dx = other.x - cell.x
+        const dy = other.y - cell.y
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        const engulfRange = t.radius + other.traits.radius * 0.8
+        if (dist < engulfRange && other.traits.radius < t.radius) {
+          // Absorb prey energy
+          cell.energy += other.energy * 0.6
+          other.alive = false
         }
       }
     }
