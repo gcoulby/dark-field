@@ -2,6 +2,36 @@
 
 ---
 
+## [2026-03-22] Milestone: extended-genome
+
+### Plan
+Expand the 16-bit genome to 30 active bits (bits 30-31 reserved). New traits:
+- Membrane permeability (bits 16-17): scales nutrient absorption ×0.5–×1.5
+- Cell role (bits 18-19): none/wall/reproductive/sensor — affects movement drag and speed cap
+- Signalling emitter/receiver (bits 20-21) and channel (bits 22-23): receiver cells are attracted toward same-channel emitters
+- Pigmentation (bits 24-25): reserved for fluorescence mode (M9)
+- Lineage high bits (bits 26-27): extends lineage to 4-bit (0-15)
+- Size modifier (bits 28-29): +0/+10/+25/+40% radius multiplier
+
+All bitwise ops use `>>> 0` to stay unsigned. GenomeViewer updated to show all 30 bits.
+
+### Implementation notes
+- `genome.ts` rewrote `getBits`, `getBit`, `randomGenome`, `mutate` with unsigned shift semantics
+- `world.ts`: permeability gates nutrient absorption; wall role gets velocity drag; signalling loop uses existing cellGrid with `nearby()` — no new data structure needed
+- `GenomeViewer.tsx`: bitmap now 300px wide over 30 bits; table extended to 18 gene regions; bit display formula updated from `16 - x` to `32 - x`
+- Predator detection unchanged: emergent from `toxin=1 AND flagella=1`
+
+### Test results
+113/113 tests passing. 22 new tests in `extendedGenome.test.ts` covering all new bit regions, `traitsFrom` extended traits, `permeabilityMultiplier`, `randomGenome` 30-bit constraint, and `mutate` 30-bit constraint.
+
+### Evaluation
+All extended genome traits are live and evolvable. Permeability and size modifier are immediately visible in the simulation (cells with high permeability absorb nutrients faster; large cells divide more slowly). The signalling mechanic is functional but subtle — emitter/receiver pairs have very low probability of co-evolving in the same direction, so its ecological impact will be most visible once chemical gradients (M8) make it easier to track.
+
+### Next milestone
+M8: Chemical gradients. Render nutrient concentration as a heatmap overlay. Chemotaxis cells should respond to the gradient field rather than individual particle positions, making their movement smoother and more biologically plausible.
+
+---
+
 ## [2026-03-22] Milestone: islands-barriers
 
 ### Plan
