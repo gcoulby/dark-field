@@ -234,7 +234,7 @@ export default function App() {
   const modeCursor = mode === 'observe' ? 'crosshair' : mode === 'wall' ? 'copy' : 'cell'
 
   return (
-    <div className={`app ${fieldMode === 'light' ? 'lightfield' : ''}`}>
+    <div className={`app ${fieldMode === 'light' ? 'lightfield' : fieldMode === 'fluoro' ? 'fluorofield' : ''}`}>
       <canvas ref={canvasRef} id="canvas"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -258,6 +258,7 @@ export default function App() {
       <div id="field-toggle">
         <button className={fieldMode === 'dark' ? 'active' : ''} onClick={() => setFieldMode('dark')}>Dark field</button>
         <button className={fieldMode === 'light' ? 'active' : ''} onClick={() => setFieldMode('light')}>Light field</button>
+        <button className={fieldMode === 'fluoro' ? 'active' : ''} onClick={() => setFieldMode('fluoro')}>Fluorescence</button>
       </div>
 
       {selectedCell && inspectorTraits && (

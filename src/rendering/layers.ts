@@ -22,6 +22,7 @@ import { drawNutrientWash } from './nutrientWash.js'
 import { drawBarrierLayer } from './barrierLayer.js'
 import { drawColonyMembranes } from './colonyMembrane.js'
 import { drawDarkFieldCells, drawLightFieldCells } from './cellLayer.js'
+import { drawFluorescenceCells } from './fluorescence.js'
 import { drawBloomPass } from './bloom.js'
 
 export const WORLD_CX = 3200 / 2
@@ -83,33 +84,43 @@ export class LayerCompositor {
 
     stepDebris(this.debris)
 
-    // Layer 0: debris background (fills canvas with bg colour + debris particles)
+    // Legacy layers accept only 'dark'|'light' — map 'fluoro' to 'dark' (black bg)
+    const legacyMode = this.fieldMode === 'light' ? 'light' : 'dark'
+    const isFluoro = this.fieldMode === 'fluoro'
+
+    // Layer 0: debris background
     const vp0 = parallaxViewport(vp, LAYER_FACTORS[0])
-    drawDebrisLayer(this.offCtxs[0]!, this.debris, makeWorldToScreen(vp0), vp0.vscale, W, H, this.fieldMode)
+    drawDebrisLayer(this.offCtxs[0]!, this.debris, makeWorldToScreen(vp0), vp0.vscale, W, H, legacyMode)
 
     // Layer 1: barriers (world parallax = 1.0)
     const vp1 = parallaxViewport(vp, LAYER_FACTORS[1])
-    drawBarrierLayer(this.offCtxs[1]!, snapshot.barriers, makeWorldToScreen(vp1), vp1.vscale, W, H, this.fieldMode)
+    drawBarrierLayer(this.offCtxs[1]!, snapshot.barriers, makeWorldToScreen(vp1), vp1.vscale, W, H, legacyMode)
 
     // Layer 2: nutrient wash (parallax 0.45)
     const vp2 = parallaxViewport(vp, LAYER_FACTORS[2])
-    drawNutrientWash(this.offCtxs[2]!, snapshot, makeWorldToScreen(vp2), vp2.vscale, W, H, this.fieldMode)
+    drawNutrientWash(this.offCtxs[2]!, snapshot, makeWorldToScreen(vp2), vp2.vscale, W, H, legacyMode)
 
     // Layer 3: cells (world parallax = 1.0)
     const vp3 = parallaxViewport(vp, LAYER_FACTORS[3])
     const wts3 = makeWorldToScreen(vp3)
-    if (this.fieldMode === 'dark') {
+    if (isFluoro) {
+      drawFluorescenceCells(this.offCtxs[3]! as unknown as CanvasRenderingContext2D, snapshot, wts3, vp3.vscale, W, H, this.selectedId)
+    } else if (this.fieldMode === 'dark') {
       drawDarkFieldCells(this.offCtxs[3]!, snapshot, wts3, vp3.vscale, W, H, this.selectedId)
     } else {
       drawLightFieldCells(this.offCtxs[3]!, snapshot, wts3, vp3.vscale, W, H, this.selectedId)
     }
 
-    // Layer 4: colony membranes (parallax 1.05 — slightly foreground)
+    // Layer 4: colony membranes (parallax 1.05 — slightly foreground; skip in fluoro)
     const vp4 = parallaxViewport(vp, LAYER_FACTORS[4])
-    drawColonyMembranes(this.offCtxs[4]!, snapshot.cells, makeWorldToScreen(vp4), vp4.vscale, W, H, this.fieldMode)
+    if (!isFluoro) {
+      drawColonyMembranes(this.offCtxs[4]!, snapshot.cells, makeWorldToScreen(vp4), vp4.vscale, W, H, legacyMode)
+    } else {
+      this.offCtxs[4]!.clearRect(0, 0, W, H)
+    }
 
-    // Layer 5: bloom scratch (world parallax = 1.0)
-    if (this.fieldMode === 'dark') {
+    // Layer 5: bloom scratch — active in dark and fluoro modes
+    if (this.fieldMode === 'dark' || isFluoro) {
       drawBloomPass(this.bloomCtx as unknown as CanvasRenderingContext2D, snapshot.cells, wts3, vp3.vscale, W, H, false)
       this.offCtxs[5]!.clearRect(0, 0, W, H)
       this.offCtxs[5]!.drawImage(this.bloomOffscreen, 0, 0)
@@ -123,31 +134,31 @@ export class LayerCompositor {
     // Layer 0: background + debris (opaque base)
     this.mainCtx.drawImage(this.offscreens[0]!, 0, 0)
 
-    // Layer 1: barriers (opaque, normal blend — walls sit on top of background)
+    // Layer 1: barriers
     this.mainCtx.drawImage(this.offscreens[1]!, 0, 0)
 
-    // Layer 2: nutrient wash (screen for dark, multiply for light)
-    if (this.fieldMode === 'dark') {
-      this.mainCtx.globalCompositeOperation = 'screen'
-      this.mainCtx.globalAlpha = 0.6
-    } else {
+    // Layer 2: nutrient wash — screen for dark/fluoro, multiply for light
+    if (this.fieldMode === 'light') {
       this.mainCtx.globalCompositeOperation = 'multiply'
       this.mainCtx.globalAlpha = 0.7
+    } else {
+      this.mainCtx.globalCompositeOperation = 'screen'
+      this.mainCtx.globalAlpha = isFluoro ? 0.4 : 0.6  // subtler in fluoro
     }
     this.mainCtx.drawImage(this.offscreens[2]!, 0, 0)
     this.mainCtx.globalCompositeOperation = 'source-over'
     this.mainCtx.globalAlpha = 1
 
-    // Layer 3: cells
+    // Layer 3: cells (fluoro draws its own black bg, so it's opaque)
     this.mainCtx.drawImage(this.offscreens[3]!, 0, 0)
 
     // Layer 4: colony membranes
     this.mainCtx.drawImage(this.offscreens[4]!, 0, 0)
 
-    // Layer 5: bloom (screen blend)
-    if (this.fieldMode === 'dark') {
+    // Layer 5: bloom (screen blend — stronger alpha in fluoro for that fluorescence bleed)
+    if (this.fieldMode === 'dark' || isFluoro) {
       this.mainCtx.globalCompositeOperation = 'screen'
-      this.mainCtx.globalAlpha = 0.65
+      this.mainCtx.globalAlpha = isFluoro ? 0.85 : 0.65
       this.mainCtx.drawImage(this.offscreens[5]!, 0, 0)
       this.mainCtx.globalCompositeOperation = 'source-over'
       this.mainCtx.globalAlpha = 1

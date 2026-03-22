@@ -1,8 +1,9 @@
 import type { WorldSnapshot } from '../simulation/serialize.js'
 import { drawDarkField } from './darkfield.js'
 import { drawLightField } from './lightfield.js'
+import { drawFluorescenceCells } from './fluorescence.js'
 
-export type FieldMode = 'dark' | 'light'
+export type FieldMode = 'dark' | 'light' | 'fluoro'
 
 export interface Viewport {
   vx: number   // world X at screen centre
@@ -41,6 +42,16 @@ export class Renderer {
       drawDarkField(
         this.ctx,
         this.bloomCtx,
+        snapshot,
+        wts,
+        vp.vscale,
+        vp.W,
+        vp.H,
+        this.selectedId,
+      )
+    } else if (this.fieldMode === 'fluoro') {
+      drawFluorescenceCells(
+        this.ctx,
         snapshot,
         wts,
         vp.vscale,
