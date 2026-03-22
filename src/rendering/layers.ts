@@ -29,7 +29,8 @@ export const WORLD_CX = 3200 / 2
 export const WORLD_CY = 3200 / 2
 
 // indices: 0=debris, 1=barriers, 2=nutrientWash, 3=cells, 4=colonyMembrane, 5=bloom
-const LAYER_FACTORS = [0.15, 1.0, 0.45, 1.0, 1.05, 1.0] as const
+// Nutrient wash is at 1.0 so the heatmap aligns with cell/nutrient world positions
+const LAYER_FACTORS = [0.15, 1.0, 1.0, 1.0, 1.05, 1.0] as const
 
 export function parallaxViewport(vp: Viewport, factor: number): Viewport {
   return {
@@ -90,15 +91,15 @@ export class LayerCompositor {
 
     // Layer 0: debris background
     const vp0 = parallaxViewport(vp, LAYER_FACTORS[0])
-    drawDebrisLayer(this.offCtxs[0]!, this.debris, makeWorldToScreen(vp0), vp0.vscale, W, H, legacyMode)
+    drawDebrisLayer(this.offCtxs[0]! as unknown as CanvasRenderingContext2D, this.debris, makeWorldToScreen(vp0), vp0.vscale, W, H, legacyMode)
 
     // Layer 1: barriers (world parallax = 1.0)
     const vp1 = parallaxViewport(vp, LAYER_FACTORS[1])
-    drawBarrierLayer(this.offCtxs[1]!, snapshot.barriers, makeWorldToScreen(vp1), vp1.vscale, W, H, legacyMode)
+    drawBarrierLayer(this.offCtxs[1]! as unknown as CanvasRenderingContext2D, snapshot.barriers, makeWorldToScreen(vp1), vp1.vscale, W, H, legacyMode)
 
-    // Layer 2: nutrient wash (parallax 0.45)
+    // Layer 2: nutrient wash (same parallax as cells so heatmap aligns with nutrients)
     const vp2 = parallaxViewport(vp, LAYER_FACTORS[2])
-    drawNutrientWash(this.offCtxs[2]!, snapshot, makeWorldToScreen(vp2), vp2.vscale, W, H, legacyMode)
+    drawNutrientWash(this.offCtxs[2]! as unknown as CanvasRenderingContext2D, snapshot, makeWorldToScreen(vp2), vp2.vscale, W, H, legacyMode)
 
     // Layer 3: cells (world parallax = 1.0)
     const vp3 = parallaxViewport(vp, LAYER_FACTORS[3])
@@ -114,7 +115,7 @@ export class LayerCompositor {
     // Layer 4: colony membranes (parallax 1.05 — slightly foreground; skip in fluoro)
     const vp4 = parallaxViewport(vp, LAYER_FACTORS[4])
     if (!isFluoro) {
-      drawColonyMembranes(this.offCtxs[4]!, snapshot.cells, makeWorldToScreen(vp4), vp4.vscale, W, H, legacyMode)
+      drawColonyMembranes(this.offCtxs[4]! as unknown as CanvasRenderingContext2D, snapshot.cells, makeWorldToScreen(vp4), vp4.vscale, W, H, legacyMode)
     } else {
       this.offCtxs[4]!.clearRect(0, 0, W, H)
     }

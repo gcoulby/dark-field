@@ -1,21 +1,33 @@
 /**
- * nutrientWash.ts — Layer 1: nutrient concentration heatmap
+ * nutrientWash.ts — Layer 2: nutrient concentration heatmap
  *
- * Renders the pre-computed nutrient density grid as a smooth colour overlay
- * using an ImageData bitmap scaled to screen space. This is much smoother than
- * the old blob approach and reads directly from the grid the worker computed.
+ * Renders the pre-computed nutrient density grid as a smooth colour overlay.
+ * The grid is always rasterised at its native resolution (GRID_W × GRID_H = 50×50)
+ * and then scaled to screen with drawImage — so cost is O(2500) regardless of zoom.
  *
- * The result looks like a chemical gradient — greener where nutrients are dense,
- * fading to background elsewhere.
+ * An OffscreenCanvas is reused across frames (allocated lazily) to avoid
+ * per-frame allocation.
  */
 
 import type { WorldSnapshot } from '../simulation/serialize.js'
+
+// Reusable scratch canvas for grid rasterisation
+let _scratch: OffscreenCanvas | null = null
+let _scratchCtx: OffscreenCanvasRenderingContext2D | null = null
+
+function getScratch(w: number, h: number): OffscreenCanvasRenderingContext2D {
+  if (!_scratch || _scratch.width !== w || _scratch.height !== h) {
+    _scratch = new OffscreenCanvas(w, h)
+    _scratchCtx = _scratch.getContext('2d')!
+  }
+  return _scratchCtx!
+}
 
 export function drawNutrientWash(
   ctx: CanvasRenderingContext2D,
   snapshot: WorldSnapshot,
   worldToScreen: (wx: number, wy: number) => [number, number],
-  vscale: number,
+  _vscale: number,
   W: number,
   H: number,
   fieldMode: 'dark' | 'light',
@@ -30,79 +42,45 @@ export function drawNutrientWash(
   for (const v of nutrientGrid) if (v > maxVal) maxVal = v
   if (maxVal === 0) return
 
-  // Build a small ImageData (gridW × gridH) then draw it scaled to screen
-  // We find the screen rect that maps to the entire world grid
-  const GRID_CELL = 3200 / gridW   // world units per cell
-  const [x0s, y0s] = worldToScreen(0, 0)
-  const [x1s, y1s] = worldToScreen(GRID_CELL, GRID_CELL)
-  const cellPx = x1s - x0s   // screen pixels per grid cell (may be fractional)
-  const cellPy = y1s - y0s
-
-  const imgW = Math.max(1, Math.round(gridW * cellPx))
-  const imgH = Math.max(1, Math.round(gridH * cellPy))
-
-  // Only draw if the grid maps to a visible region
-  if (x0s > W || y0s > H || x0s + imgW < 0 || y0s + imgH < 0) return
-
-  // Cap the ImageData size to avoid excessive memory (e.g. deeply zoomed out)
-  const clampedW = Math.min(imgW, W * 2)
-  const clampedH = Math.min(imgH, H * 2)
-
-  const imgData = ctx.createImageData(clampedW, clampedH)
+  // Rasterise grid at native resolution into a reusable scratch canvas
+  const scratchCtx = getScratch(gridW, gridH)
+  const imgData = scratchCtx.createImageData(gridW, gridH)
   const data = imgData.data
-  const scaleX = gridW / clampedW
-  const scaleY = gridH / clampedH
 
-  for (let py = 0; py < clampedH; py++) {
-    const gy = py * scaleY
-    const iy = Math.floor(gy)
-    const fy = gy - iy
-    const iy1 = Math.min(iy + 1, gridH - 1)
-
-    for (let px = 0; px < clampedW; px++) {
-      const gx = px * scaleX
-      const ix = Math.floor(gx)
-      const fx = gx - ix
-      const ix1 = Math.min(ix + 1, gridW - 1)
-
-      // Bilinear interpolation
-      const v00 = nutrientGrid[iy  * gridW + ix ]!
-      const v10 = nutrientGrid[iy  * gridW + ix1]!
-      const v01 = nutrientGrid[iy1 * gridW + ix ]!
-      const v11 = nutrientGrid[iy1 * gridW + ix1]!
-      const val = v00 * (1 - fx) * (1 - fy)
-                + v10 *       fx  * (1 - fy)
-                + v01 * (1 - fx) *       fy
-                + v11 *       fx  *       fy
-
-      const intensity = val / maxVal
-
-      const idx = (py * clampedW + px) * 4
-      if (fieldMode === 'dark') {
-        // Green-teal glow on dark background
-        data[idx]     = Math.round(20  * intensity)  // R
-        data[idx + 1] = Math.round(140 * intensity)  // G
-        data[idx + 2] = Math.round(60  * intensity)  // B
-        data[idx + 3] = Math.round(80  * intensity)  // A (max ~80/255)
-      } else {
-        // Subtle blue-green tint on light background
-        data[idx]     = Math.round(10  * intensity)
-        data[idx + 1] = Math.round(100 * intensity)
-        data[idx + 2] = Math.round(50  * intensity)
-        data[idx + 3] = Math.round(55  * intensity)
-      }
+  for (let i = 0; i < gridW * gridH; i++) {
+    const intensity = nutrientGrid[i]! / maxVal
+    const idx = i * 4
+    if (fieldMode === 'dark') {
+      data[idx]     = Math.round(20  * intensity)
+      data[idx + 1] = Math.round(140 * intensity)
+      data[idx + 2] = Math.round(60  * intensity)
+      data[idx + 3] = Math.round(90  * intensity)
+    } else {
+      data[idx]     = Math.round(10  * intensity)
+      data[idx + 1] = Math.round(100 * intensity)
+      data[idx + 2] = Math.round(50  * intensity)
+      data[idx + 3] = Math.round(60  * intensity)
     }
   }
+  scratchCtx.putImageData(imgData, 0, 0)
 
-  // Draw the scaled bitmap at the world-to-screen origin
-  // Use a temporary canvas so we can drawImage with smoothing
-  const tmpCanvas = new OffscreenCanvas(clampedW, clampedH)
-  const tmpCtx = tmpCanvas.getContext('2d')!
-  tmpCtx.putImageData(imgData, 0, 0)
+  // Map grid origin and extent to screen coordinates
+  const GRID_CELL_SIZE = 3200 / gridW  // world units per grid cell
+  const [x0s, y0s] = worldToScreen(0, 0)
+  const [x1s, y1s] = worldToScreen(3200, 3200)
+  const imgW = x1s - x0s
+  const imgH = y1s - y0s
 
+  if (imgW <= 0 || imgH <= 0) return
+  if (x0s > W || y0s > H || x0s + imgW < 0 || y0s + imgH < 0) return
+
+  // drawImage with smoothing scales the 50×50 bitmap to the viewport extent
   ctx.save()
   ctx.imageSmoothingEnabled = true
   ctx.imageSmoothingQuality = 'medium'
-  ctx.drawImage(tmpCanvas, x0s, y0s, clampedW * (imgW / clampedW), imgH)
+  ctx.drawImage(_scratch!, x0s, y0s, imgW, imgH)
   ctx.restore()
+
+  // suppress unused-variable warning for the reference
+  void GRID_CELL_SIZE
 }

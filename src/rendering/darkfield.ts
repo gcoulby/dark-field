@@ -1,5 +1,5 @@
 import { traitsFrom, buildShapePoints } from '../simulation/genome.js'
-import type { CellSnapshot, NutrientSnapshot, WorldSnapshot } from '../simulation/serialize.js'
+import type { CellSnapshot, WorldSnapshot } from '../simulation/serialize.js'
 import { drawShape } from './shapes.js'
 import { drawBloomPass } from './bloom.js'
 
