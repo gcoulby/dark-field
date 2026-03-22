@@ -12,6 +12,7 @@
 | 8 | chemical-gradients | Nutrient concentration heatmap layer, gradient chemotaxis, signalling molecule diffusion | done | feature/chemical-gradients | 126/126 tests |
 | 9 | fluorescence-mode | Third render mode, GFP-style emission by expressed genes, configurable channel mapping | done | feature/fluorescence-mode | 126/126 tests |
 | 10 | replay-export | World state snapshot recording, replay at any speed, PNG/video export | done | feature/replay-export | 137/137 tests |
+| 11 | visual-realism | Dark field diffraction rings (concentric rims), extended stats (gen distribution, top genomes, avg gen/energy) | done | feature/visual-realism | 137/137 tests |
 
 ---
 
