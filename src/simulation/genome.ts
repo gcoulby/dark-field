@@ -28,6 +28,8 @@ export interface Traits {
   toxin: 0 | 1
   shape: 0 | 1 | 2 | 3
   lineage: number        // 0-3
+  /** Derived: true when toxin=1 AND flagella=1. No extra bits needed. */
+  isPredator: boolean
 }
 
 export interface ShapePoint {
@@ -48,17 +50,20 @@ const RADIUS_VALUES = [4, 6, 8.5, 12] as const
 const DIVISION_ENERGY_VALUES = [80, 120, 170, 230] as const
 
 export function traitsFrom(genome: number): Traits {
+  const flagella = getBit(genome, 7)
+  const toxin = getBit(genome, 11)
   return {
     adhesion: getBits(genome, 0, 2),
     metabolism: METABOLISM_VALUES[getBits(genome, 2, 2)]!,
     radius: RADIUS_VALUES[getBits(genome, 4, 2)]!,
     photo: getBit(genome, 6),
-    flagella: getBit(genome, 7),
+    flagella,
     divisionEnergy: DIVISION_ENERGY_VALUES[getBits(genome, 8, 2)]!,
     chemotaxis: getBit(genome, 10),
-    toxin: getBit(genome, 11),
+    toxin,
     shape: getBits(genome, 12, 2) as 0 | 1 | 2 | 3,
     lineage: getBits(genome, 14, 2),
+    isPredator: flagella === 1 && toxin === 1,
   }
 }
 

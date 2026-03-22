@@ -28,8 +28,9 @@ export function drawDarkFieldCells(
     const t = traitsFrom(cell.genome)
     const sr = t.radius * vscale
     const ef = Math.min(1, cell.energy / t.divisionEnergy)
-    const hue = (t.lineage / 4) * 360
-    const sat = 50 + t.metabolism * 18
+    // Predators: crimson hue; others: lineage-derived green/teal
+    const hue = t.isPredator ? 0 + t.lineage * 8 : (t.lineage / 4) * 360
+    const sat = t.isPredator ? 70 + t.metabolism * 10 : 50 + t.metabolism * 18
     const lit = 40 + ef * 22
     const shapePoints = buildShapePoints(t.shape, t.radius, cell.genome)
 
@@ -75,18 +76,20 @@ export function drawDarkFieldCells(
       ctx.stroke()
     }
 
-    // Flagella
+    // Flagella (predators get a longer, more aggressive flagella)
     if (t.flagella && sr > 4) {
+      const flagLen = t.isPredator ? 4.5 : 3.2
+      const flagAlpha = t.isPredator ? 0.55 : 0.28
       ctx.beginPath()
       ctx.moveTo(sx, sy)
       ctx.quadraticCurveTo(
         sx + Math.cos(cell.phase + 0.9) * sr,
         sy + Math.sin(cell.phase + 0.9) * sr,
-        sx + Math.cos(cell.phase * 1.8) * sr * 3.2,
+        sx + Math.cos(cell.phase * 1.8) * sr * flagLen,
         sy + Math.sin(cell.phase * 1.8) * sr * 0.9,
       )
-      ;(ctx as CanvasRenderingContext2D).strokeStyle = `hsla(${hue},40%,65%,0.28)`
-      ;(ctx as CanvasRenderingContext2D).lineWidth = Math.max(0.3, sr * 0.07)
+      ;(ctx as CanvasRenderingContext2D).strokeStyle = `hsla(${hue},40%,65%,${flagAlpha})`
+      ;(ctx as CanvasRenderingContext2D).lineWidth = Math.max(0.3, sr * (t.isPredator ? 0.12 : 0.07))
       ctx.stroke()
     }
 
@@ -138,8 +141,8 @@ export function drawLightFieldCells(
     const t = traitsFrom(cell.genome)
     const sr = t.radius * vscale
     const ef = Math.min(1, cell.energy / t.divisionEnergy)
-    const hue = (t.lineage / 4) * 360
-    const sat = 55
+    const hue = t.isPredator ? 0 + t.lineage * 8 : (t.lineage / 4) * 360
+    const sat = t.isPredator ? 65 : 55
     const darkLit = 10 + ef * 14
     const shapePoints = buildShapePoints(t.shape, t.radius, cell.genome)
 
