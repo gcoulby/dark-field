@@ -23,7 +23,7 @@ export function useSimulation({ onSnapshot, paused, speed }: UseSimulationOption
   useEffect(() => { onSnapshotRef.current = onSnapshot }, [onSnapshot])
 
   useEffect(() => {
-    const worker = new Worker(new URL('../workers/sim.worker.ts', import.meta.url), { type: 'module' })
+    const worker = new Worker(new URL('../../workers/sim.worker.ts', import.meta.url), { type: 'module' })
     workerRef.current = worker
 
     worker.addEventListener('message', (e: MessageEvent) => {

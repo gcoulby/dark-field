@@ -3,7 +3,7 @@
 | # | Slug | Description | Status | Branch | Notes |
 |---|------|-------------|--------|--------|-------|
 | 1 | scaffold | Vite/React/TS project, worker architecture, port HTML prototype to typed modules, Vitest, GitHub Actions deploy | done | feature/scaffold | 38/38 tests passing |
-| 2 | parallax-layers | Multi-layer canvas compositor, background drift particles, nutrient wash layer, parallax pan/zoom | planned | — | |
+| 2 | parallax-layers | Multi-layer canvas compositor, background drift particles, nutrient wash layer, parallax pan/zoom | done | feature/parallax-layers | 50/50 tests |
 | 3 | islands-barriers | Polygon barrier editor, barrier collision, isolated nutrient budgets, visual treatment | planned | — | |
 | 4 | stats-panel | Slide-in panel: species count over time, dominant lineage, genome frequency charts, energy budget | planned | — | |
 | 5 | dna-rna-viewer | Click-cell genome breakdown: bit ranges labelled, current expression, mutation delta | planned | — | |
