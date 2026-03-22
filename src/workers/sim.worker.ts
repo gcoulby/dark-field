@@ -25,6 +25,7 @@ import {
 } from '../simulation/world.js'
 import { serializeWorld } from '../simulation/serialize.js'
 import type { WorldState } from '../simulation/world.js'
+import type { Barrier } from '../simulation/islands.js'
 
 let world: WorldState = initWorld()
 
@@ -64,6 +65,10 @@ self.addEventListener('message', (e: MessageEvent) => {
 
     case 'kill':
       killAt(world, msg.wx as number, msg.wy as number)
+      break
+
+    case 'setBarriers':
+      world.barriers = msg.barriers as Barrier[]
       break
   }
 })

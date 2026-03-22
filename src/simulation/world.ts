@@ -3,6 +3,8 @@ import type { Cell } from './cell.js'
 import { makeNutrient } from './nutrients.js'
 import type { Nutrient } from './nutrients.js'
 import { buildGrid, nearby } from './physics.js'
+import { resolveCircleBarrier, circleOverlapsBarrier } from './islands.js'
+import type { Barrier } from './islands.js'
 
 export const WORLD_W = 3200
 export const WORLD_H = 3200
@@ -13,6 +15,7 @@ const NUTRIENT_SPAWN_CHANCE = 0.4
 export interface WorldState {
   cells: Cell[]
   nutrients: Nutrient[]
+  barriers: Barrier[]
   tick: number
   maxGen: number
 }
@@ -33,7 +36,7 @@ export function initWorld(): WorldState {
     cells.push(makeCell(cx + Math.cos(a) * r, cy + Math.sin(a) * r))
   }
 
-  return { cells, nutrients, tick: 0, maxGen: 0 }
+  return { cells, nutrients, barriers: [], tick: 0, maxGen: 0 }
 }
 
 export function addCluster(world: WorldState, cx: number, cy: number): void {
@@ -86,6 +89,20 @@ export function stepWorld(world: WorldState): void {
     n.y += (Math.random() - 0.5) * 0.35
     n.x = Math.max(10, Math.min(WORLD_W - 10, n.x))
     n.y = Math.max(10, Math.min(WORLD_H - 10, n.y))
+    // Nudge nutrients out of barriers
+    for (const barrier of world.barriers) {
+      const cp = { x: Math.max(barrier.x, Math.min(barrier.x + barrier.w, n.x)), y: Math.max(barrier.y, Math.min(barrier.y + barrier.h, n.y)) }
+      if (cp.x === n.x && cp.y === n.y) {
+        // Inside barrier — push to nearest edge
+        const toLeft = n.x - barrier.x; const toRight = barrier.x + barrier.w - n.x
+        const toTop = n.y - barrier.y; const toBottom = barrier.y + barrier.h - n.y
+        const minD = Math.min(toLeft, toRight, toTop, toBottom)
+        if (minD === toLeft) n.x = barrier.x - 2
+        else if (minD === toRight) n.x = barrier.x + barrier.w + 2
+        else if (minD === toTop) n.y = barrier.y - 2
+        else n.y = barrier.y + barrier.h + 2
+      }
+    }
   }
 
   // Spontaneous nutrient spawn
@@ -154,6 +171,14 @@ export function stepWorld(world: WorldState): void {
     if (cell.x > WORLD_W - 20) { cell.x = WORLD_W - 20; cell.vx *= -0.5 }
     if (cell.y < 20) { cell.y = 20; cell.vy *= -0.5 }
     if (cell.y > WORLD_H - 20) { cell.y = WORLD_H - 20; cell.vy *= -0.5 }
+
+    // Barrier collision
+    for (const barrier of world.barriers) {
+      if (circleOverlapsBarrier(barrier, cell.x, cell.y, t.radius)) {
+        const r = resolveCircleBarrier(barrier, cell.x, cell.y, t.radius, cell.vx, cell.vy)
+        cell.x = r.x; cell.y = r.y; cell.vx = r.vx; cell.vy = r.vy
+      }
+    }
 
     // Neighbour interactions (bonds + collision + toxin)
     const neighbours = nearby(cellGrid, cell.x, cell.y, t.radius * 3.5)

@@ -71,5 +71,5 @@ export function useSimulation({ onSnapshot, paused, speed }: UseSimulationOption
     sendCommand({ type: 'kill', wx, wy })
   }, [sendCommand])
 
-  return { reset, stepOnce, addCluster, inject, seed, kill }
+  return { reset, stepOnce, addCluster, inject, seed, kill, sendCommand }
 }
