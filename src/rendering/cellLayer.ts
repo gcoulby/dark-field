@@ -194,7 +194,7 @@ export function drawDarkFieldCells(
       ctx, sx, sy, sr,
       hue, secHue, ef, cell.phase,
       t.shape, cell.rotation,
-      t.isPredator, !!t.photo, t.flagella,
+      t.isPredator, !!t.photo, !!t.flagella,
       cell.id === selectedId,
     )
   }
