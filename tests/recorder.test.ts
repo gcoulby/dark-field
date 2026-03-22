@@ -7,7 +7,12 @@ function makeSnap(tick: number): WorldSnapshot {
     cells: [],
     nutrients: [],
     barriers: [],
-    stats: { cellCount: 0, colonyCount: 0, nutrientCount: 0, maxGeneration: 0, speciesCount: 0, tick },
+    stats: {
+      cellCount: 0, colonyCount: 0, nutrientCount: 0, maxGeneration: 0,
+      speciesCount: 0, tick, avgGeneration: 0, avgEnergy: 0,
+      genDistribution: [0, 0, 0, 0, 0] as [number,number,number,number,number],
+      topGenomes: [],
+    },
     nutrientGrid: [],
     gridW: 0,
     gridH: 0,

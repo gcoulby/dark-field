@@ -55,6 +55,48 @@
   border: 1px solid #1a3a1a;
 }
 
+.stats-genome-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8px;
+  color: #6a9a6a;
+  margin-bottom: 4px;
+}
+
+.stats-genome-table th {
+  color: #2a5a2a;
+  font-weight: normal;
+  letter-spacing: 0.08em;
+  text-align: left;
+  padding: 1px 3px;
+  border-bottom: 1px solid #1a3a1a;
+}
+
+.stats-genome-table td {
+  padding: 2px 3px;
+  vertical-align: middle;
+}
+
+.stats-genome-swatch {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+.stats-genome-hex {
+  font-size: 7px;
+  color: #4a7a4a;
+  letter-spacing: 0.05em;
+}
+
+.stats-genome-empty {
+  color: #2a4a2a;
+  font-style: italic;
+  padding: 4px 3px;
+}
+
 /* Light field */
 .lightfield .stats-panel {
   background: rgba(240, 248, 240, 0.95);
