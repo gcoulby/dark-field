@@ -17,16 +17,26 @@ interface GeneRegion {
 }
 
 const GENE_REGIONS: GeneRegion[] = [
-  { label: 'Adhesion', start: 0, length: 2, format: v => ['none', 'A', 'B', 'C'][v]! },
-  { label: 'Metabolism', start: 2, length: 2, format: v => ['slow', 'med', 'fast', 'rapid'][v]! },
-  { label: 'Size', start: 4, length: 2, format: v => ['tiny', 'small', 'med', 'large'][v]! },
-  { label: 'Photo', start: 6, length: 1, format: v => v ? 'yes' : 'no' },
-  { label: 'Flagella', start: 7, length: 1, format: v => v ? 'yes' : 'no' },
-  { label: 'Div thresh', start: 8, length: 2, format: v => ['low', 'med', 'high', 'max'][v]! },
-  { label: 'Chemotaxis', start: 10, length: 1, format: v => v ? 'yes' : 'no' },
-  { label: 'Toxin', start: 11, length: 1, format: v => v ? 'yes' : 'no' },
-  { label: 'Shape', start: 12, length: 2, format: v => ['round', 'elongated', 'spiky', 'irreg'][v]! },
-  { label: 'Lineage', start: 14, length: 2, format: v => String(v) },
+  // Core traits (bits 0-15)
+  { label: 'Adhesion',    start: 0,  length: 2, format: v => ['none', 'A', 'B', 'C'][v]! },
+  { label: 'Metabolism',  start: 2,  length: 2, format: v => ['slow', 'med', 'fast', 'rapid'][v]! },
+  { label: 'Size',        start: 4,  length: 2, format: v => ['tiny', 'small', 'med', 'large'][v]! },
+  { label: 'Photo',       start: 6,  length: 1, format: v => v ? 'yes' : 'no' },
+  { label: 'Flagella',    start: 7,  length: 1, format: v => v ? 'yes' : 'no' },
+  { label: 'Div thresh',  start: 8,  length: 2, format: v => ['low', 'med', 'high', 'max'][v]! },
+  { label: 'Chemotaxis',  start: 10, length: 1, format: v => v ? 'yes' : 'no' },
+  { label: 'Toxin',       start: 11, length: 1, format: v => v ? 'yes' : 'no' },
+  { label: 'Shape',       start: 12, length: 2, format: v => ['round', 'elong', 'spiky', 'irreg'][v]! },
+  { label: 'Lineage lo',  start: 14, length: 2, format: v => String(v) },
+  // Extended traits (bits 16-29)
+  { label: 'Permeab.',    start: 16, length: 2, format: v => ['×0.5', '×0.85', '×1.15', '×1.5'][v]! },
+  { label: 'Role',        start: 18, length: 2, format: v => ['none', 'wall', 'repro', 'sensor'][v]! },
+  { label: 'Emitter',     start: 20, length: 1, format: v => v ? 'yes' : 'no' },
+  { label: 'Receiver',    start: 21, length: 1, format: v => v ? 'yes' : 'no' },
+  { label: 'Signal ch.',  start: 22, length: 2, format: v => String(v) },
+  { label: 'Pigment',     start: 24, length: 2, format: v => ['none', 'red', 'green', 'blue'][v]! },
+  { label: 'Lineage hi',  start: 26, length: 2, format: v => String(v) },
+  { label: 'Size mod',    start: 28, length: 2, format: v => ['+0%', '+10%', '+25%', '+40%'][v]! },
 ]
 
 function drawGenomeBitmap(
@@ -41,14 +51,16 @@ function drawGenomeBitmap(
   ctx.fillStyle = '#000'
   ctx.fillRect(0, 0, W, H)
 
-  const bitW = W / 16
+  const bitW = W / 30
   const regionColors = [
     '#5a8a5a', '#4a7a8a', '#8a7a4a', '#3a7a3a',
     '#3a3a7a', '#7a3a3a', '#6a5a3a', '#3a6a6a',
-    '#7a4a7a', '#6a6a3a',
+    '#7a4a7a', '#6a6a3a', '#4a6a8a', '#8a4a6a',
+    '#5a7a4a', '#7a5a4a', '#4a4a8a', '#8a6a4a',
+    '#5a5a7a', '#6a4a5a',
   ]
 
-  // Draw gene regions
+  // Draw gene regions (bits 0-29)
   for (let ri = 0; ri < GENE_REGIONS.length; ri++) {
     const region = GENE_REGIONS[ri]!
     const color = regionColors[ri % regionColors.length]!
@@ -61,11 +73,11 @@ function drawGenomeBitmap(
     }
   }
 
-  // Bit index labels at bottom
+  // Bit index labels at bottom (every 5 bits to avoid crowding)
   ctx.font = '6px Courier New'
   ctx.textAlign = 'center'
-  for (let i = 0; i < 16; i++) {
-    ctx.fillStyle = getBit(genome, i) ? '#aadaaa' : '#3a5a3a'
+  for (let i = 0; i < 30; i += 5) {
+    ctx.fillStyle = '#5a7a5a'
     ctx.fillText(String(i), i * bitW + bitW / 2, H - 1)
   }
 }
@@ -78,7 +90,7 @@ interface GenomeViewerProps {
 export function GenomeViewer({ genome, onClose }: GenomeViewerProps) {
   const bitmapRef = useRef<HTMLCanvasElement>(null)
   const traits = traitsFrom(genome)
-  const genomeBin = genome.toString(2).padStart(16, '0')
+  const genomeBin = genome.toString(2).padStart(32, '0')
 
   useEffect(() => {
     if (bitmapRef.current) {
@@ -94,7 +106,7 @@ export function GenomeViewer({ genome, onClose }: GenomeViewerProps) {
         <button className="gv-close" onClick={onClose}>✕</button>
       </div>
 
-      <canvas ref={bitmapRef} width={256} height={24} className="gv-bitmap" />
+      <canvas ref={bitmapRef} width={300} height={24} className="gv-bitmap" />
 
       <div className="gv-binary">{genomeBin}</div>
 
@@ -103,7 +115,7 @@ export function GenomeViewer({ genome, onClose }: GenomeViewerProps) {
           const val = region.length === 1
             ? getBit(genome, region.start)
             : getBits(genome, region.start, region.length)
-          const bits = genomeBin.slice(15 - (region.start + region.length - 1), 16 - region.start)
+          const bits = genomeBin.slice(32 - region.start - region.length, 32 - region.start)
           // Display bits in reading order (MSB first within the region)
           const bitsDisplay = bits.split('').reverse().join('')
           return (

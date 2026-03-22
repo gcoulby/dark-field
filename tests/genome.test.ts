@@ -35,7 +35,7 @@ describe('traitsFrom', () => {
     expect(t.shape).toBeGreaterThanOrEqual(0)
     expect(t.shape).toBeLessThanOrEqual(3)
     expect(t.lineage).toBeGreaterThanOrEqual(0)
-    expect(t.lineage).toBeLessThanOrEqual(3)
+    expect(t.lineage).toBeLessThanOrEqual(15) // 4-bit lineage (0-15)
   })
 
   it('produces valid traits for genome 0xFFFF', () => {
@@ -60,12 +60,12 @@ describe('traitsFrom', () => {
 })
 
 describe('mutate', () => {
-  it('always returns a valid 16-bit number', () => {
+  it('always returns a valid 30-bit number', () => {
     for (let i = 0; i < 100; i++) {
-      const g = (Math.random() * 65536) | 0
+      const g = (Math.random() * 0x40000000) >>> 0
       const mutated = mutate(g)
       expect(mutated).toBeGreaterThanOrEqual(0)
-      expect(mutated).toBeLessThanOrEqual(0xFFFF)
+      expect(mutated).toBeLessThanOrEqual(0x3FFFFFFF) // bits 0-29 only
       expect(Number.isInteger(mutated)).toBe(true)
     }
   })

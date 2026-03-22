@@ -1,4 +1,4 @@
-import { traitsFrom, buildShapePoints, mutate } from './genome.js'
+import { traitsFrom, buildShapePoints, mutate, randomGenome } from './genome.js'
 import type { Traits, ShapePoint } from './genome.js'
 
 export interface Cell {
@@ -28,7 +28,7 @@ export function makeCell(
   genome?: number,
   generation?: number,
 ): Cell {
-  const g = genome !== undefined ? genome : (Math.random() * 65536) | 0
+  const g = genome !== undefined ? genome : randomGenome()
   const traits = traitsFrom(g)
   return {
     id: _nextId++,
